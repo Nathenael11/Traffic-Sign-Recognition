@@ -76,14 +76,18 @@ class GTSDBDetector:
         img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
         return img, r, (dw, dh)
 
-    def predict(self, img_input, conf_thresh: float = 0.20, iou_thresh: float = 0.45):
+    def predict(self, img_input, conf_thresh: float = 0.15, iou_thresh: float = 0.45):
         if self.session is None:
             self._load_model()
             if self.session is None:
                 raise RuntimeError("ONNX model session not initialized. Train and export best.onnx first.")
 
         # Convert input to BGR numpy array
-        if isinstance(img_input, Image.Image):
+        if isinstance(img_input, str):
+            orig_bgr = cv2.imread(img_input)
+            if orig_bgr is None:
+                raise ValueError(f"Could not read image from path: {img_input}")
+        elif isinstance(img_input, Image.Image):
             orig_bgr = cv2.cvtColor(np.array(img_input), cv2.COLOR_RGB2BGR)
         elif isinstance(img_input, np.ndarray):
             if len(img_input.shape) == 2:
@@ -125,6 +129,11 @@ class GTSDBDetector:
         for row in predictions:
             cx, cy, w, h = row[:4]
             scores = row[4:]
+            
+            # Apply sigmoid if scores are raw logits
+            if np.max(scores) > 1.0 or np.min(scores) < 0.0:
+                scores = 1.0 / (1.0 + np.exp(-scores))
+
             max_class_id = int(np.argmax(scores))
             max_score = float(scores[max_class_id])
 

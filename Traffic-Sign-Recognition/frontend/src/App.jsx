@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Camera, Upload, Layers, Info, CheckCircle2, AlertTriangle, 
-  Download, RefreshCw, Zap, Sliders, Play, Square, FileArchive, Activity, SwitchCamera
+  Download, RefreshCw, Zap, Sliders, Play, Square, FileArchive, Activity
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -9,7 +9,7 @@ const API_BASE = '';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('single'); // single, batch, camera, info
-  const [confidence, setConfidence] = useState(0.25);
+  const [confidence, setConfidence] = useState(0.15);
   const [modelInfo, setModelInfo] = useState(null);
 
   // Single Image State
@@ -438,7 +438,7 @@ export default function App() {
 
                 {singleResult.count === 0 ? (
                   <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem 0' }}>
-                    No signs detected above threshold {confidence}. Lower the slider to see lower-confidence detections.
+                    No signs detected above threshold {(confidence * 100).toFixed(0)}%. Lower the slider to see lower-confidence detections.
                   </p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '500px', overflowY: 'auto' }}>

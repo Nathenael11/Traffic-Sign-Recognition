@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Camera, Upload, Layers, Info, CheckCircle2, AlertTriangle, 
-  Download, RefreshCw, Zap, Sliders, Play, Square, FileArchive, Activity
+  Download, RefreshCw, Zap, Sliders, Play, Square, FileArchive, Activity, SwitchCamera
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -20,12 +20,12 @@ export default function App() {
 
   // Batch Processing State
   const [batchFiles, setBatchFiles] = useState([]);
-  const [batchZip, setBatchZip] = useState(null);
   const [batchResult, setBatchResult] = useState(null);
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchError, setBatchError] = useState(null);
 
-  // Live Camera State
+  // Live Camera State (Defaults to 'environment' for Rear/Back camera on phones)
+  const [cameraFacingMode, setCameraFacingMode] = useState('environment'); 
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
   const [cameraFps, setCameraFps] = useState(0);
@@ -101,12 +101,9 @@ export default function App() {
     setBatchResult(null);
 
     const formData = new FormData();
-    let isZip = false;
-
     files.forEach(f => {
       if (f.name.endsWith('.zip')) {
         formData.append('zip_file', f);
-        isZip = true;
       } else {
         formData.append('files', f);
       }
@@ -155,20 +152,37 @@ export default function App() {
     }
   };
 
-  // Live Camera Scan logic
-  const startCamera = async () => {
+  // Live Camera Scan logic (Supports switching between Rear & Front camera)
+  const startCamera = async (facing = cameraFacingMode) => {
     setCameraError(null);
+    
+    // Stop current stream if running
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject;
+      stream.getTracks().forEach(track => track.stop());
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" } 
-      });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: facing } 
+        });
+      } catch (e1) {
+        // Fallback for mobile browsers with basic constraint syntax
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: facing } 
+        });
+      }
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play();
         setCameraActive(true);
       }
     } catch (err) {
-      setCameraError("Camera access denied or unreadable. Please allow webcam permissions in your browser.");
+      console.error("Camera access error:", err);
+      setCameraError("Camera access denied or unreadable. Please check camera permissions in your browser.");
       setCameraActive(false);
     }
   };
@@ -183,6 +197,14 @@ export default function App() {
       cancelAnimationFrame(animFrameRef.current);
     }
     setCameraActive(false);
+  };
+
+  const toggleCameraFacingMode = () => {
+    const nextFacing = cameraFacingMode === 'environment' ? 'user' : 'environment';
+    setCameraFacingMode(nextFacing);
+    if (cameraActive) {
+      startCamera(nextFacing);
+    }
   };
 
   useEffect(() => {
@@ -206,7 +228,6 @@ export default function App() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
-      // Draw video frame to temporary canvas to convert to blob
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(async (blob) => {
@@ -267,36 +288,34 @@ export default function App() {
     <div className="app-layout">
       {/* Header */}
       <header className="header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ background: 'linear-gradient(135deg, #38bdf8, #a855f7)', padding: '0.6rem', borderRadius: '12px' }}>
-                <Activity size={24} color="#fff" />
-              </div>
-              <div>
-                <h1 style={{ fontSize: '1.4rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  Traffic Sign Recognition Engine
-                </h1>
-                <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
-                  GTSDB Benchmark • YOLOv8 + ONNX Runtime • Author: <strong style={{ color: 'var(--accent-cyan)' }}>Nathenael Ermias</strong>
-                </p>
-              </div>
+        <div className="header-inner">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ background: 'linear-gradient(135deg, #38bdf8, #a855f7)', padding: '0.6rem', borderRadius: '12px', flexShrink: 0 }}>
+              <Activity size={24} color="#fff" />
+            </div>
+            <div>
+              <h1 className="header-title">
+                Traffic Sign Recognition
+              </h1>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                GTSDB Benchmark • YOLOv8 + ONNX • Author: <strong style={{ color: 'var(--accent-cyan)' }}>Nathenael Ermias</strong>
+              </p>
             </div>
           </div>
 
           {/* Navigation Tabs */}
           <nav className="nav-tabs">
             <button className={`tab-btn ${activeTab === 'single' ? 'active' : ''}`} onClick={() => setActiveTab('single')}>
-              <Upload size={18} /> Single Image
+              <Upload size={18} /> <span>Single Image</span>
             </button>
             <button className={`tab-btn ${activeTab === 'batch' ? 'active' : ''}`} onClick={() => setActiveTab('batch')}>
-              <Layers size={18} /> Batch Process
+              <Layers size={18} /> <span>Batch Process</span>
             </button>
             <button className={`tab-btn ${activeTab === 'camera' ? 'active' : ''}`} onClick={() => setActiveTab('camera')}>
-              <Camera size={18} /> Live Webcam
+              <Camera size={18} /> <span>Live Webcam</span>
             </button>
             <button className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
-              <Info size={18} /> Model Specs
+              <Info size={18} /> <span>Model Specs</span>
             </button>
           </nav>
         </div>
@@ -304,8 +323,8 @@ export default function App() {
 
       <main className="main-container">
         {/* Top Global Controls: Confidence Slider & Specs Bar */}
-        <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-          <div className="slider-container" style={{ minWidth: '320px', flex: 1 }}>
+        <div className="glass-card controls-bar" style={{ padding: '1.25rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+          <div className="slider-container" style={{ minWidth: '280px', flex: 1 }}>
             <Sliders size={20} color="var(--accent-cyan)" />
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem', fontSize: '0.85rem' }}>
@@ -326,23 +345,23 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <div className="badge badge-cyan">
-              <Zap size={14} /> Latency: {modelInfo ? `${modelInfo.latency_ms} ms` : '18 ms'}
+              <Zap size={14} /> Latency: {modelInfo ? `${modelInfo.latency_ms} ms` : '18.5 ms'}
             </div>
             <div className="badge badge-purple">
               <Activity size={14} /> FPS: {modelInfo ? `${modelInfo.fps} FPS` : '54 FPS'}
             </div>
             <div className="badge badge-emerald">
-              <CheckCircle2 size={14} /> mAP@0.5: {modelInfo ? `${(modelInfo.map50 * 100).toFixed(1)}%` : '88.5%'}
+              <CheckCircle2 size={14} /> mAP@0.5: {modelInfo ? `${(modelInfo.map50 * 100).toFixed(1)}%` : '3.0%'}
             </div>
           </div>
         </div>
 
         {/* TAB 1: SINGLE IMAGE DETECTION */}
         {activeTab === 'single' && (
-          <div style={{ display: 'grid', gridTemplateColumns: singleResult ? '1fr 380px' : '1fr', gap: '2rem' }}>
-            <div className="glass-card" style={{ padding: '2rem' }}>
+          <div className="responsive-grid">
+            <div className="glass-card" style={{ padding: '1.5rem' }}>
               <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Upload size={20} color="var(--accent-cyan)" /> Upload Single Driving Scene
               </h2>
@@ -366,11 +385,11 @@ export default function App() {
                   onChange={(e) => e.target.files && handleSingleImageUpload(e.target.files[0])}
                 />
                 <Upload size={48} color="var(--accent-cyan)" style={{ marginBottom: '1rem', opacity: 0.8 }} />
-                <p style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                  Drag & drop an image here, or click to browse
+                <p style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                  Tap or drag an image here to scan
                 </p>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  Supports full-resolution GTSDB driving scene images (JPG, PNG, WEBP)
+                  Supports full-resolution driving scene images (JPG, PNG, WEBP)
                 </p>
               </div>
 
@@ -391,11 +410,11 @@ export default function App() {
 
               {singleResult && !singleLoading && (
                 <div style={{ marginTop: '2rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Annotated Object Detection Result</h3>
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <span className="badge badge-cyan">{singleResult.count} Signs Detected</span>
-                      <span className="badge badge-purple">{singleResult.latency_ms} ms ({singleResult.fps} FPS)</span>
+                      <span className="badge badge-purple">{singleResult.latency_ms} ms</span>
                     </div>
                   </div>
 
@@ -403,7 +422,7 @@ export default function App() {
                     <img 
                       src={singleResult.annotated_image} 
                       alt="Detection Result" 
-                      style={{ width: '100%', height: 'auto', display: 'block', maxHeight: '650px', objectFit: 'contain' }} 
+                      style={{ width: '100%', height: 'auto', display: 'block', maxHeight: '600px', objectFit: 'contain' }} 
                     />
                   </div>
                 </div>
@@ -419,10 +438,10 @@ export default function App() {
 
                 {singleResult.count === 0 ? (
                   <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem 0' }}>
-                    No signs detected above confidence threshold {confidence}. Try lowering threshold slider above.
+                    No signs detected above threshold {confidence}. Lower the slider to see lower-confidence detections.
                   </p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '550px', overflowY: 'auto' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '500px', overflowY: 'auto' }}>
                     {singleResult.detections.map((det, idx) => (
                       <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.85rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
@@ -430,7 +449,7 @@ export default function App() {
                           <span className="badge badge-emerald">{det.confidence_percent}</span>
                         </div>
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                          Box [X, Y, W, H]: {det.bbox.join(', ')}
+                          BBox [X, Y, W, H]: {det.bbox.join(', ')}
                         </div>
                       </div>
                     ))}
@@ -443,7 +462,7 @@ export default function App() {
 
         {/* TAB 2: BATCH PROCESSING */}
         {activeTab === 'batch' && (
-          <div className="glass-card" style={{ padding: '2rem' }}>
+          <div className="glass-card" style={{ padding: '1.5rem' }}>
             <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Layers size={20} color="var(--accent-purple)" /> Batch Processing & ZIP Export
             </h2>
@@ -461,11 +480,11 @@ export default function App() {
                 onChange={handleBatchUpload}
               />
               <FileArchive size={48} color="var(--accent-purple)" style={{ marginBottom: '1rem', opacity: 0.8 }} />
-              <p style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+              <p style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.5rem' }}>
                 Upload multiple images or a single ZIP archive
               </p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                Processes entire directory of GTSDB driving scenes automatically
+                Processes entire directory of driving scenes automatically
               </p>
             </div>
 
@@ -488,9 +507,9 @@ export default function App() {
               <div style={{ marginTop: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Batch Processing Results</h3>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Batch Results</h3>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                      Processed {batchResult.processed_count} images • Avg Latency: {batchResult.avg_latency_ms} ms • Speed: {batchResult.overall_fps} FPS
+                      Processed {batchResult.processed_count} images • Speed: {batchResult.overall_fps} FPS
                     </p>
                   </div>
                   <button className="btn-primary" onClick={handleDownloadBatchZip}>
@@ -498,16 +517,16 @@ export default function App() {
                   </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
                   {batchResult.results.map((item, idx) => (
                     <div key={idx} className="glass-card" style={{ padding: '0.85rem', overflow: 'hidden' }}>
                       <img 
                         src={item.annotated_image} 
                         alt={item.filename} 
-                        style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '8px', marginBottom: '0.75rem' }} 
+                        style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '8px', marginBottom: '0.75rem' }} 
                       />
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 600, fontSize: '0.85rem', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '160px' }}>
+                        <span style={{ fontWeight: 600, fontSize: '0.85rem', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '140px' }}>
                           {item.filename}
                         </span>
                         <span className="badge badge-purple">{item.count} signs</span>
@@ -520,32 +539,42 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 3: LIVE CAMERA SCAN */}
+        {/* TAB 3: LIVE CAMERA SCAN (Mobile Rear Camera + Switch Button) */}
         {activeTab === 'camera' && (
-          <div className="glass-card" style={{ padding: '2rem' }}>
+          <div className="glass-card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h2 style={{ fontSize: '1.2rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Camera size={20} color="var(--accent-emerald)" /> Live Browser Webcam Detection
+                  <Camera size={20} color="var(--accent-emerald)" /> Live Camera Detection
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                  Real-time object detection stream via ONNX Runtime & WebRTC
+                  Real-time traffic sign detection via browser camera stream
                 </p>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  className="btn-secondary" 
+                  onClick={toggleCameraFacingMode} 
+                  title="Switch between Rear and Front camera"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+                >
+                  <RefreshCw size={16} /> 
+                  <span>{cameraFacingMode === 'environment' ? 'Rear (Back)' : 'Front (Selfie)'}</span>
+                </button>
+
                 {cameraActive && (
                   <>
-                    <div className="badge badge-emerald">Live FPS: {cameraFps}</div>
-                    <div className="badge badge-cyan">Latency: {cameraLatency} ms</div>
+                    <div className="badge badge-emerald">FPS: {cameraFps}</div>
+                    <div className="badge badge-cyan">{cameraLatency} ms</div>
                     <button className="btn-secondary" style={{ borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)' }} onClick={stopCamera}>
-                      <Square size={16} /> Stop Camera
+                      <Square size={16} /> Stop
                     </button>
                   </>
                 )}
                 {!cameraActive && (
-                  <button className="btn-primary" onClick={startCamera}>
-                    <Play size={18} /> Start Webcam Scan
+                  <button className="btn-primary" onClick={() => startCamera(cameraFacingMode)}>
+                    <Play size={18} /> Start Camera
                   </button>
                 )}
               </div>
@@ -559,7 +588,7 @@ export default function App() {
               </div>
             )}
 
-            <div style={{ position: 'relative', width: '100%', minHeight: '480px', background: '#000', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div className="video-container">
               <video 
                 ref={videoRef} 
                 playsInline 
@@ -568,18 +597,23 @@ export default function App() {
               />
               <canvas 
                 ref={canvasRef} 
-                style={{ width: '100%', height: 'auto', maxHeight: '680px', display: cameraActive ? 'block' : 'none' }} 
+                style={{ width: '100%', height: 'auto', maxHeight: '600px', display: cameraActive ? 'block' : 'none', borderRadius: '12px' }} 
               />
 
               {!cameraActive && (
-                <div style={{ textAlign: 'center', padding: '3rem' }}>
-                  <Camera size={64} color="var(--accent-emerald)" style={{ opacity: 0.4, marginBottom: '1rem' }} />
-                  <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                    Click "Start Webcam Scan" to enable browser camera detection
+                <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                  <Camera size={56} color="var(--accent-emerald)" style={{ opacity: 0.4, marginBottom: '1rem' }} />
+                  <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+                    Tap "Start Camera" to scan traffic signs with your mobile camera
                   </p>
-                  <button className="btn-primary" onClick={startCamera}>
-                    <Play size={18} /> Enable Camera
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button className="btn-primary" onClick={() => startCamera(cameraFacingMode)}>
+                      <Play size={18} /> Start Camera
+                    </button>
+                    <button className="btn-secondary" onClick={toggleCameraFacingMode}>
+                      <RefreshCw size={16} /> Switch to {cameraFacingMode === 'environment' ? 'Front' : 'Rear'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -592,11 +626,11 @@ export default function App() {
             <div className="stats-grid">
               <div className="glass-card metric-card">
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>mAP@0.5 Overall</span>
-                <span className="metric-value">{modelInfo ? `${(modelInfo.map50 * 100).toFixed(1)}%` : '88.5%'}</span>
+                <span className="metric-value">{modelInfo ? `${(modelInfo.map50 * 100).toFixed(1)}%` : '3.0%'}</span>
               </div>
               <div className="glass-card metric-card">
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>mAP@0.5:0.95</span>
-                <span className="metric-value">{modelInfo ? `${(modelInfo.map50_95 * 100).toFixed(1)}%` : '68.4%'}</span>
+                <span className="metric-value">{modelInfo ? `${(modelInfo.map50_95 * 100).toFixed(1)}%` : '2.35%'}</span>
               </div>
               <div className="glass-card metric-card">
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Inference Speed</span>
@@ -608,7 +642,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
+            <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--accent-cyan)' }}>
                 Dataset & Class Imbalance Analysis (GTSDB)
               </h2>
@@ -617,9 +651,8 @@ export default function App() {
                 Due to real-world driving data collection constraints, the dataset suffers from extreme class imbalance:
               </p>
               <ul style={{ color: 'var(--text-secondary)', paddingLeft: '1.5rem', lineHeight: 1.8, marginBottom: '1.5rem' }}>
-                <li><strong>Frequent Classes:</strong> Classes like <em>Speed Limit 30/50/80</em>, <em>Priority Road</em>, and <em>Keep Right</em> contain 20 to 45 training instances, allowing YOLOv8 to achieve 90%+ precision.</li>
-                <li><strong>Data Scarcity Classes:</strong> Classes such as <em>Road narrows right</em>, <em>Wild animals crossing</em>, and <em>Go straight or left</em> contain 0 training instances in the standard benchmark split, yielding zero recall.</li>
-                <li><strong>Handling Strategy:</strong> We train on all 43 categories with heavy mosaic and HSV data augmentations, and explicitly report per-class metrics to maintain full scientific transparency.</li>
+                <li><strong>Frequent Classes:</strong> Classes like <em>Speed Limit 30/50/80</em>, <em>Priority Road</em>, and <em>Keep Right</em> contain 20 to 45 training instances.</li>
+                <li><strong>Data Scarcity Classes:</strong> Classes such as <em>Road narrows right</em>, <em>Wild animals crossing</em>, and <em>Go straight or left</em> contain 0 training instances in the standard benchmark split.</li>
               </ul>
             </div>
 

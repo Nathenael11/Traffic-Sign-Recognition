@@ -2,12 +2,12 @@
   "author": "Nathenael Ermias",
   "dataset": "GTSDB (German Traffic Sign Detection Benchmark)",
   "model_architecture": "YOLOv8n",
-  "map50": 0.0138,
-  "map50_95": 0.0094,
-  "precision": 0.0109,
-  "recall": 0.2371,
-  "latency_ms": 73.21,
-  "fps": 13.66,
+  "map50": 0.03,
+  "map50_95": 0.0235,
+  "precision": 0.0108,
+  "recall": 0.3393,
+  "latency_ms": 18.5,
+  "fps": 54.0,
   "onnx_exported": true,
   "tflite_exported": true,
   "class_count": 43,
@@ -58,176 +58,262 @@
   ],
   "per_class_metrics": {
     "0": {
-      "name": "Speed limit (20km/h)",
-      "mAP50": 0.0094
+      "Class ID": 0,
+      "Class Name": "Speed limit (20km/h)",
+      "Train Count": 3,
+      "mAP@0.5": 0.0235
     },
     "1": {
-      "name": "Speed limit (30km/h)",
-      "mAP50": 0.1019
+      "Class ID": 1,
+      "Class Name": "Speed limit (30km/h)",
+      "Train Count": 32,
+      "mAP@0.5": 0.5069
     },
     "2": {
-      "name": "Speed limit (50km/h)",
-      "mAP50": 0.0715
+      "Class ID": 2,
+      "Class Name": "Speed limit (50km/h)",
+      "Train Count": 43,
+      "mAP@0.5": 0.0312
     },
     "3": {
-      "name": "Speed limit (60km/h)",
-      "mAP50": 0.0032
+      "Class ID": 3,
+      "Class Name": "Speed limit (60km/h)",
+      "Train Count": 16,
+      "mAP@0.5": 0.0157
     },
     "4": {
-      "name": "Speed limit (70km/h)",
-      "mAP50": 0.007
+      "Class ID": 4,
+      "Class Name": "Speed limit (70km/h)",
+      "Train Count": 15,
+      "mAP@0.5": 0.0259
     },
     "5": {
-      "name": "Speed limit (80km/h)",
-      "mAP50": 0.0128
+      "Class ID": 5,
+      "Class Name": "Speed limit (80km/h)",
+      "Train Count": 22,
+      "mAP@0.5": 0.0005
     },
     "6": {
-      "name": "End of speed limit (80km/h)",
-      "mAP50": 0.0
+      "Class ID": 6,
+      "Class Name": "End of speed limit (80km/h)",
+      "Train Count": 9,
+      "mAP@0.5": 0.0003
     },
     "7": {
-      "name": "Speed limit (100km/h)",
-      "mAP50": 0.0202
+      "Class ID": 7,
+      "Class Name": "Speed limit (100km/h)",
+      "Train Count": 23,
+      "mAP@0.5": 0.0109
     },
     "8": {
-      "name": "Speed limit (120km/h)",
-      "mAP50": 0.0121
+      "Class ID": 8,
+      "Class Name": "Speed limit (120km/h)",
+      "Train Count": 17,
+      "mAP@0.5": 0.0
     },
     "9": {
-      "name": "No passing",
-      "mAP50": 0.0088
+      "Class ID": 9,
+      "Class Name": "No passing",
+      "Train Count": 22,
+      "mAP@0.5": 0.0007
     },
     "10": {
-      "name": "No passing for heavy vehicles",
-      "mAP50": 0.0141
+      "Class ID": 10,
+      "Class Name": "No passing for heavy vehicles",
+      "Train Count": 32,
+      "mAP@0.5": 0.0013
     },
     "11": {
-      "name": "Right-of-way at intersection",
-      "mAP50": 0.0094
+      "Class ID": 11,
+      "Class Name": "Right-of-way at intersection",
+      "Train Count": 20,
+      "mAP@0.5": 0.0235
     },
     "12": {
-      "name": "Priority road",
-      "mAP50": 0.0456
+      "Class ID": 12,
+      "Class Name": "Priority road",
+      "Train Count": 42,
+      "mAP@0.5": 0.003
     },
     "13": {
-      "name": "Yield",
-      "mAP50": 0.0094
+      "Class ID": 13,
+      "Class Name": "Yield",
+      "Train Count": 29,
+      "mAP@0.5": 0.0235
     },
     "14": {
-      "name": "Stop",
-      "mAP50": 0.0094
+      "Class ID": 14,
+      "Class Name": "Stop",
+      "Train Count": 11,
+      "mAP@0.5": 0.0235
     },
     "15": {
-      "name": "No vehicles",
-      "mAP50": 0.0
+      "Class ID": 15,
+      "Class Name": "No vehicles",
+      "Train Count": 4,
+      "mAP@0.5": 0.0129
     },
     "16": {
-      "name": "Heavy vehicles prohibited",
-      "mAP50": 0.0
+      "Class ID": 16,
+      "Class Name": "Heavy vehicles prohibited",
+      "Train Count": 5,
+      "mAP@0.5": 0.0239
     },
     "17": {
-      "name": "No entry",
-      "mAP50": 0.0
+      "Class ID": 17,
+      "Class Name": "No entry",
+      "Train Count": 7,
+      "mAP@0.5": 0.0223
     },
     "18": {
-      "name": "General caution",
-      "mAP50": 0.0062
+      "Class ID": 18,
+      "Class Name": "General caution",
+      "Train Count": 17,
+      "mAP@0.5": 0.0509
     },
     "19": {
-      "name": "Dangerous curve left",
-      "mAP50": 0.0
+      "Class ID": 19,
+      "Class Name": "Dangerous curve left",
+      "Train Count": 2,
+      "mAP@0.5": 0.1003
     },
     "20": {
-      "name": "Dangerous curve right",
-      "mAP50": 0.0094
+      "Class ID": 20,
+      "Class Name": "Dangerous curve right",
+      "Train Count": 3,
+      "mAP@0.5": 0.0235
     },
     "21": {
-      "name": "Double curve",
-      "mAP50": 0.0
+      "Class ID": 21,
+      "Class Name": "Double curve",
+      "Train Count": 3,
+      "mAP@0.5": 0.008
     },
     "22": {
-      "name": "Bumpy road",
-      "mAP50": 0.0
+      "Class ID": 22,
+      "Class Name": "Bumpy road",
+      "Train Count": 3,
+      "mAP@0.5": 0.0
     },
     "23": {
-      "name": "Slippery road",
-      "mAP50": 0.0025
+      "Class ID": 23,
+      "Class Name": "Slippery road",
+      "Train Count": 7,
+      "mAP@0.5": 0.0014
     },
     "24": {
-      "name": "Road narrows right",
-      "mAP50": 0.0
+      "Class ID": 24,
+      "Class Name": "Road narrows right",
+      "Train Count": 0,
+      "mAP@0.5": 0.0
     },
     "25": {
-      "name": "Road work",
-      "mAP50": 0.0103
+      "Class ID": 25,
+      "Class Name": "Road work",
+      "Train Count": 11,
+      "mAP@0.5": 0.0448
     },
     "26": {
-      "name": "Traffic signals",
-      "mAP50": 0.0
+      "Class ID": 26,
+      "Class Name": "Traffic signals",
+      "Train Count": 7,
+      "mAP@0.5": 0.0
     },
     "27": {
-      "name": "Pedestrians",
-      "mAP50": 0.0
+      "Class ID": 27,
+      "Class Name": "Pedestrians",
+      "Train Count": 2,
+      "mAP@0.5": 0.0
     },
     "28": {
-      "name": "Children crossing",
-      "mAP50": 0.0
+      "Class ID": 28,
+      "Class Name": "Children crossing",
+      "Train Count": 4,
+      "mAP@0.5": 0.0012
     },
     "29": {
-      "name": "Bicycles crossing",
-      "mAP50": 0.0
+      "Class ID": 29,
+      "Class Name": "Bicycles crossing",
+      "Train Count": 2,
+      "mAP@0.5": 0.0
     },
     "30": {
-      "name": "Beware of ice/snow",
-      "mAP50": 0.0
+      "Class ID": 30,
+      "Class Name": "Beware of ice/snow",
+      "Train Count": 8,
+      "mAP@0.5": 0.0
     },
     "31": {
-      "name": "Wild animals crossing",
-      "mAP50": 0.0
+      "Class ID": 31,
+      "Class Name": "Wild animals crossing",
+      "Train Count": 0,
+      "mAP@0.5": 0.0
     },
     "32": {
-      "name": "End of speed and passing limits",
-      "mAP50": 0.0
+      "Class ID": 32,
+      "Class Name": "End of speed and passing limits",
+      "Train Count": 2,
+      "mAP@0.5": 0.0003
     },
     "33": {
-      "name": "Turn right ahead",
-      "mAP50": 0.0
+      "Class ID": 33,
+      "Class Name": "Turn right ahead",
+      "Train Count": 7,
+      "mAP@0.5": 0.0174
     },
     "34": {
-      "name": "Turn left ahead",
-      "mAP50": 0.0
+      "Class ID": 34,
+      "Class Name": "Turn left ahead",
+      "Train Count": 5,
+      "mAP@0.5": 0.0017
     },
     "35": {
-      "name": "Ahead only",
-      "mAP50": 0.0
+      "Class ID": 35,
+      "Class Name": "Ahead only",
+      "Train Count": 12,
+      "mAP@0.5": 0.0065
     },
     "36": {
-      "name": "Go straight or right",
-      "mAP50": 0.0
+      "Class ID": 36,
+      "Class Name": "Go straight or right",
+      "Train Count": 1,
+      "mAP@0.5": 0.0
     },
     "37": {
-      "name": "Go straight or left",
-      "mAP50": 0.0
+      "Class ID": 37,
+      "Class Name": "Go straight or left",
+      "Train Count": 0,
+      "mAP@0.5": 0.0
     },
     "38": {
-      "name": "Keep right",
-      "mAP50": 0.0395
+      "Class ID": 38,
+      "Class Name": "Keep right",
+      "Train Count": 45,
+      "mAP@0.5": 0.0001
     },
     "39": {
-      "name": "Keep left",
-      "mAP50": 0.0
+      "Class ID": 39,
+      "Class Name": "Keep left",
+      "Train Count": 2,
+      "mAP@0.5": 0.0
     },
     "40": {
-      "name": "Roundabout mandatory",
-      "mAP50": 0.0
+      "Class ID": 40,
+      "Class Name": "Roundabout mandatory",
+      "Train Count": 4,
+      "mAP@0.5": 0.0
     },
     "41": {
-      "name": "End of no passing",
-      "mAP50": 0.0
+      "Class ID": 41,
+      "Class Name": "End of no passing",
+      "Train Count": 3,
+      "mAP@0.5": 0.0008
     },
     "42": {
-      "name": "End of no passing for heavy vehicles",
-      "mAP50": 0.0
+      "Class ID": 42,
+      "Class Name": "End of no passing for heavy vehicles",
+      "Train Count": 4,
+      "mAP@0.5": 0.0047
     }
   }
 }

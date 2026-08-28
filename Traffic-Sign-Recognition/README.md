@@ -1,33 +1,52 @@
-# GTSDB Traffic Sign Recognition — Production Web Application & GPU Training
+# Real-Time Traffic Sign Recognition (GTSDB)
 
-**Author**: Nathenael Ermias  
-**Repository**: [https://github.com/Nathenael11/Traffic-Sign-Recognition](https://github.com/Nathenael11/Traffic-Sign-Recognition)  
-**Notebook**: [`Traffic_Sign_Recognition_GTSDB.ipynb`](./Traffic_Sign_Recognition_GTSDB.ipynb)  
-**Dataset**: German Traffic Sign Detection Benchmark (GTSDB)  
-**Model Architecture**: YOLOv8 (yolov8n), exported to **ONNX** & **TFLite**  
-**Inference Engine**: ONNX Runtime (FastAPI Python Backend)  
-**Frontend**: Vite + React Single Page Web Application (Modern Glassmorphism UI)  
+Live Web Demo: **[traffic-sign-recognition-b6cv.onrender.com](https://traffic-sign-recognition-b6cv.onrender.com)**  
+GitHub Repository: **[github.com/Nathenael11/Traffic-Sign-Recognition](https://github.com/Nathenael11/Traffic-Sign-Recognition)**  
 
----
-
-## 🌟 Executive Overview
-
-This repository delivers an end-to-end, production-ready Traffic Sign Recognition web application built on the **German Traffic Sign Detection Benchmark (GTSDB)**. The model locates small traffic signs within cluttered, full-resolution driving scene images and classifies them simultaneously across 43 classes.
-
-Inference speed is treated as a hard production constraint. By converting the trained PyTorch model to **ONNX Runtime**, the application achieves ultra-low latency and real-time browser execution (**>50 FPS**).
+Developed by **Nathenael Ermias**  
+📧 Email: [nathnaelermais@gamil.com](mailto:nathnaelermais@gamil.com)  
+🔗 LinkedIn: [Nathenael Ermias](https://www.linkedin.com/in/nathenael-ermias-753746428)  
 
 ---
 
-## 📊 Dataset Analysis & Complete 43-Class Breakdown Table
+## Overview
 
-### GTSDB Dataset Statistics
-- **Training Set**: 600 total images (506 images containing 506 sign objects, 94 background scenes).
-- **Test Set**: 300 held-out images (235 images containing 361 sign objects, 65 background scenes).
-- **Total Categories**: 43 German Traffic Sign classes (index 0 to 42).
+This project is an end-to-end computer vision web application built to detect and classify traffic signs in full driving scenes using the German Traffic Sign Detection Benchmark (GTSDB).
 
-### Full 43-Class Instance Distribution Table
+Instead of operating on pre-cropped traffic sign icons, the model processes high-resolution driving images, locates small signs within cluttered background environments, and predicts their category across 43 classes.
 
-| Class ID | Class Name | Train Count | Test Count | Class Category |
+To achieve real-time performance on standard hardware, the trained YOLOv8 model is exported to **ONNX** format and served via **ONNX Runtime** with a lightweight FastAPI backend and a Vite/React dashboard.
+
+---
+
+## Key Features
+
+- **Single Image Scan**: Drag and drop any driving scene image to view detected sign bounding boxes, confidence scores, and class labels.
+- **Adjustable Confidence Threshold**: Slide confidence filtering live (0.0 to 1.0) to observe model precision vs recall trade-offs.
+- **Batch Processing & CSV Export**: Upload multiple images or `.zip` archives. Process all scenes in bulk and download annotated images alongside a structured `detections_summary.csv`.
+- **Live Browser Webcam Scan**: Real-time traffic sign detection directly from your webcam stream with an active FPS counter.
+- **Model Specs & Class Distribution**: Transparent per-class dataset distribution and test set metrics viewable directly within the application.
+
+---
+
+## Tech Stack & Architecture
+
+- **Model & Training**: PyTorch, Ultralytics YOLOv8n, Google Colab GPU (T4).
+- **Inference Engine**: ONNX Runtime (CPU execution optimized for containerized deployment).
+- **Backend API**: Python 3.11, FastAPI, Uvicorn, OpenCV.
+- **Frontend Dashboard**: React 18, Vite, Tailwind CSS / Custom Glassmorphism styling.
+- **Deployment**: Docker multi-stage build running on Render Web Services.
+
+---
+
+## Dataset & Per-Class Instance Breakdown
+
+The dataset consists of **600 training images** (506 containing sign objects, 94 background scenes) and **300 held-out test images**.
+
+### Class Imbalance & Transparency Note
+The GTSDB benchmark exhibits significant real-world class imbalance. High-frequency signs like *Priority Road* or *Speed Limit 30/50* have 30–45 training examples, whereas rare signs like *Road narrows right*, *Wild animals crossing*, and *Go straight or left* have 0 training examples in the benchmark split.
+
+| Class ID | Class Name | Train Instances | Test Instances | Category |
 | :---: | :--- | :---: | :---: | :--- |
 | **0** | Speed limit (20km/h) | 3 | 0 | Speed Limit |
 | **1** | Speed limit (30km/h) | 32 | 31 | Speed Limit |
@@ -40,33 +59,33 @@ Inference speed is treated as a hard production constraint. By converting the tr
 | **8** | Speed limit (120km/h) | 17 | 1 | Speed Limit |
 | **9** | No passing | 22 | 4 | Prohibitory |
 | **10** | No passing for heavy vehicles | 32 | 11 | Prohibitory |
-| **11** | Right-of-way at intersection | 20 | 0 | Mandatory / Priority |
-| **12** | Priority road | 42 | 22 | Mandatory / Priority |
-| **13** | Yield | 29 | 0 | Mandatory / Priority |
-| **14** | Stop | 11 | 0 | Mandatory / Priority |
+| **11** | Right-of-way at intersection | 20 | 0 | Priority |
+| **12** | Priority road | 42 | 22 | Priority |
+| **13** | Yield | 29 | 0 | Priority |
+| **14** | Stop | 11 | 0 | Priority |
 | **15** | No vehicles | 4 | 4 | Prohibitory |
 | **16** | Heavy vehicles prohibited | 5 | 7 | Prohibitory |
 | **17** | No entry | 7 | 3 | Prohibitory |
-| **18** | General caution | 17 | 10 | Danger |
-| **19** | Dangerous curve left | 2 | 7 | Danger |
-| **20** | Dangerous curve right | 3 | 0 | Danger |
-| **21** | Double curve | 3 | 5 | Danger |
-| **22** | Bumpy road | 3 | 1 | Danger |
-| **23** | Slippery road | 7 | 10 | Danger |
-| **24** | Road narrows right | **0** | 2 | Danger (Zero Train Instances) |
-| **25** | Road work | 11 | 1 | Danger |
-| **26** | Traffic signals | 7 | 5 | Danger |
-| **27** | Pedestrians | 2 | 3 | Danger |
-| **28** | Children crossing | 4 | 3 | Danger |
-| **29** | Bicycles crossing | 2 | 5 | Danger |
-| **30** | Beware of ice/snow | 8 | 1 | Danger |
-| **31** | Wild animals crossing | **0** | 1 | Danger (Zero Train Instances) |
-| **32** | End of speed and passing limits | 2 | 31 | Other |
+| **18** | General caution | 17 | 10 | Warning |
+| **19** | Dangerous curve left | 2 | 7 | Warning |
+| **20** | Dangerous curve right | 3 | 0 | Warning |
+| **21** | Double curve | 3 | 5 | Warning |
+| **22** | Bumpy road | 3 | 1 | Warning |
+| **23** | Slippery road | 7 | 10 | Warning |
+| **24** | Road narrows right | 0 | 2 | Warning (Zero Train Examples) |
+| **25** | Road work | 11 | 1 | Warning |
+| **26** | Traffic signals | 7 | 5 | Warning |
+| **27** | Pedestrians | 2 | 3 | Warning |
+| **28** | Children crossing | 4 | 3 | Warning |
+| **29** | Bicycles crossing | 2 | 5 | Warning |
+| **30** | Beware of ice/snow | 8 | 1 | Warning |
+| **31** | Wild animals crossing | 0 | 1 | Warning (Zero Train Examples) |
+| **32** | End of speed and passing limits | 2 | 31 | Mandatory |
 | **33** | Turn right ahead | 7 | 2 | Mandatory |
 | **34** | Turn left ahead | 5 | 37 | Mandatory |
 | **35** | Ahead only | 12 | 3 | Mandatory |
 | **36** | Go straight or right | 1 | 1 | Mandatory |
-| **37** | Go straight or left | **0** | 4 | Mandatory (Zero Train Instances) |
+| **37** | Go straight or left | 0 | 4 | Mandatory (Zero Train Examples) |
 | **38** | Keep right | 45 | 16 | Mandatory |
 | **39** | Keep left | 2 | 2 | Mandatory |
 | **40** | Roundabout mandatory | 4 | 3 | Mandatory |
@@ -75,84 +94,38 @@ Inference speed is treated as a hard production constraint. By converting the tr
 
 ---
 
-## 💻 Google Colab GPU Model Training
+## Google Colab Notebook
 
-You can train the model on Google Colab GPU (T4/V100) using the included notebook:
-1. Open [`Traffic_Sign_Recognition_GTSDB.ipynb`](./Traffic_Sign_Recognition_GTSDB.ipynb) in Google Colab.
-2. Select **Runtime** -> **Change runtime type** -> **GPU (T4)**.
-3. Upload `GTSDB_Train_and_Test.zip` or mount Google Drive.
-4. Run all cells to train `yolov8n.pt` for 50 epochs with GPU acceleration.
-5. Download `best.onnx` and `model_metrics.json` and replace the existing files in `models/`.
+You can train or fine-tune the model yourself on a Google Colab GPU (T4/V100):
+
+- Notebook File: [`Traffic_Sign_Recognition_GTSDB.ipynb`](./Traffic_Sign_Recognition_GTSDB.ipynb)
+- Open in Google Colab, upload `GTSDB_Train_and_Test.zip` (or mount Drive), and run the cells to train YOLOv8 and export your own `best.onnx` model weights.
 
 ---
 
-## 🏗️ System Architecture
+## Local Setup & Development
 
-```
-                                    +----------------------------------------+
-                                    |              USER BROWSER              |
-                                    |  Vite + React Glassmorphism Dashboard  |
-                                    +-------------------+--------------------+
-                                                        |
-                                                        | REST API / JSON / FormData
-                                                        v
-                                    +----------------------------------------+
-                                    |            FASTAPI BACKEND             |
-                                    |                                        |
-                                    |  GET  /health        -> Health Check   |
-                                    |  GET  /api/info      -> Metrics/Specs  |
-                                    |  POST /api/predict   -> Single Image   |
-                                    |  POST /api/predict/batch -> ZIP/Multi  |
-                                    |  POST /api/predict/frame -> Webcam     |
-                                    |  POST /api/batch/download -> ZIP/CSV   |
-                                    |                                        |
-                                    |   Inference Engine: ONNX Runtime       |
-                                    +----------------------------------------+
-```
-
----
-
-## ⚡ Quick Start & Local Execution
-
-### 1. Backend Setup
+### 1. Backend Setup (FastAPI + ONNX Runtime)
 ```bash
-# Navigate to backend directory
 cd backend
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Run FastAPI server
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 2. Frontend Setup
+### 2. Frontend Setup (React + Vite)
 ```bash
-# Navigate to frontend directory
 cd frontend
-
-# Install packages
 npm install
-
-# Run Vite development server
 npm run dev
 ```
 
----
-
-## 🐳 Docker & Render Deployment
-
-```bash
-# Build container
-docker build -t gtsdb-app .
-
-# Run container
-docker run -p 8000:8000 gtsdb-app
-```
+The application will be accessible at `http://localhost:8000`.
 
 ---
 
-## 📜 Author & License
+## Contact
 
-Authored and maintained by **Nathenael Ermias**.  
-Dataset provided by **German Traffic Sign Detection Benchmark (GTSDB)**.
+**Nathenael Ermias**  
+- Email: [nathnaelermais@gamil.com](mailto:nathnaelermais@gamil.com)  
+- LinkedIn: [linkedin.com/in/nathenael-ermias-753746428](https://www.linkedin.com/in/nathenael-ermias-753746428)  
+- GitHub: [github.com/Nathenael11](https://github.com/Nathenael11)

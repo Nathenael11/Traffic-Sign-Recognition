@@ -92,16 +92,11 @@ The GTSDB benchmark exhibits significant real-world class imbalance. High-freque
 | **41** | End of no passing | 3 | 10 | Prohibitory |
 | **42** | End of no passing for heavy vehicles | 4 | 9 | Prohibitory |
 
----
 
-## Google Colab Notebook
 
-You can train or fine-tune the model yourself on a Google Colab GPU (T4/V100):
 
-- Notebook File: [`Traffic_Sign_Recognition_GTSDB.ipynb`](./Traffic_Sign_Recognition_GTSDB.ipynb)
-- Open in Google Colab, upload `GTSDB_Train_and_Test.zip` (or mount Drive), and run the cells to train YOLOv8 and export your own `best.onnx` model weights.
 
----
+
 
 ## Local Setup & Development
 

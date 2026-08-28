@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: gtsdb-traffic-sign-recognition
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: ALLOWED_ORIGINS
+        value: "*"

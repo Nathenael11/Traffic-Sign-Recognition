@@ -53,7 +53,7 @@ def prepare_yolo_dataset():
     train_files = all_train_imgs[:split_idx]
     val_files = all_train_imgs[split_idx:]
 
-    def copy_files(file_list, dst_img, dst_lbl, src_lbl_dir):
+    def copy_and_clean_files(file_list, dst_img, dst_lbl, src_lbl_dir):
         for img_path in file_list:
             base_name = os.path.basename(img_path)
             stem, _ = os.path.splitext(base_name)
@@ -61,16 +61,26 @@ def prepare_yolo_dataset():
             
             lbl_src = os.path.join(src_lbl_dir, f"{stem}.txt")
             if os.path.exists(lbl_src):
-                shutil.copy2(lbl_src, os.path.join(dst_lbl, f"{stem}.txt"))
+                clean_lines = []
+                with open(lbl_src, 'r') as f:
+                    for line in f:
+                        parts = line.strip().split()
+                        if parts and parts[0].isdigit():
+                            cid = int(parts[0])
+                            if 0 <= cid < 43:
+                                clean_lines.append(line.strip())
+                
+                with open(os.path.join(dst_lbl, f"{stem}.txt"), 'w') as f:
+                    f.write('\n'.join(clean_lines) + '\n' if clean_lines else '')
 
     print(f"Copying {len(train_files)} train images...")
-    copy_files(train_files, target_dirs['train_img'], target_dirs['train_lbl'], train_lbl_dir)
+    copy_and_clean_files(train_files, target_dirs['train_img'], target_dirs['train_lbl'], train_lbl_dir)
     print(f"Copying {len(val_files)} val images...")
-    copy_files(val_files, target_dirs['val_img'], target_dirs['val_lbl'], train_lbl_dir)
+    copy_and_clean_files(val_files, target_dirs['val_img'], target_dirs['val_lbl'], train_lbl_dir)
 
     all_test_imgs = glob.glob(os.path.join(test_img_dir, "*.*"))
     print(f"Copying {len(all_test_imgs)} test images...")
-    copy_files(all_test_imgs, target_dirs['test_img'], target_dirs['test_lbl'], test_lbl_dir)
+    copy_and_clean_files(all_test_imgs, target_dirs['test_img'], target_dirs['test_lbl'], test_lbl_dir)
 
     yaml_path = os.path.join(YOLO_DATA_DIR, "dataset.yaml")
     yaml_content = f"""path: {YOLO_DATA_DIR.replace('\\', '/')}
@@ -96,10 +106,10 @@ def train_and_eval():
     print("--> Initializing YOLOv8n model...")
     model = YOLO('yolov8n.pt')
 
-    print("--> Starting fast CPU training (imgsz=416, batch=32, cache=True)...")
+    print("--> Starting 12-epoch training on GTSDB dataset (imgsz=416, batch=32, cache=True)...")
     results = model.train(
         data=yaml_path,
-        epochs=10,
+        epochs=12,
         imgsz=416,
         batch=32,
         cache=True,
@@ -124,59 +134,69 @@ def train_and_eval():
     print(f"Best model saved at: {best_pt_path}")
     shutil.copy2(best_pt_path, os.path.join(MODEL_DIR, "best.pt"))
 
-    print("--> Evaluating on held-out TEST dataset at imgsz=640...")
+    print("--> Evaluating trained model on held-out TEST dataset at imgsz=640...")
     best_model = YOLO(os.path.join(MODEL_DIR, "best.pt"))
     val_results = best_model.val(data=yaml_path, split="test", imgsz=640)
 
-    # Extract overall metrics
-    map50 = float(val_results.results_dict.get('metrics/mAP50(B)', 0.885))
-    map50_95 = float(val_results.results_dict.get('metrics/mAP50-95(B)', 0.684))
-    precision = float(val_results.results_dict.get('metrics/precision(B)', 0.912))
-    recall = float(val_results.results_dict.get('metrics/recall(B)', 0.845))
+    # STRICT METRIC EXTRACTION - NO FALLBACK DEFAULTS
+    if not hasattr(val_results, 'box') or val_results.box is None:
+        raise RuntimeError("Validation results object does not contain box metrics!")
+
+    map50 = float(val_results.box.map50)
+    map50_95 = float(val_results.box.map)
+    precision = float(val_results.box.mp)
+    recall = float(val_results.box.mr)
 
     # Per-class metrics
     per_class_metrics = {}
-    if hasattr(val_results, 'maps') and val_results.maps is not None:
-        for idx, map_val in enumerate(val_results.maps):
-            per_class_metrics[idx] = {
-                "name": CLASS_NAMES[idx],
-                "mAP50": round(float(map_val), 4)
-            }
+    maps_array = val_results.box.maps
+    for idx in range(len(CLASS_NAMES)):
+        cname = CLASS_NAMES[idx]
+        cmap = float(maps_array[idx]) if idx < len(maps_array) else 0.0
+        per_class_metrics[idx] = {
+            "name": cname,
+            "mAP50": round(cmap, 4)
+        }
 
-    # Speed benchmark
-    print("--> Benchmarking inference speed...")
-    dummy_input = np.random.randint(0, 255, (640, 640, 3), dtype=np.uint8)
-    for _ in range(5):
-        _ = best_model(dummy_input, verbose=False)
-    
-    t0 = time.time()
-    for _ in range(20):
-        _ = best_model(dummy_input, verbose=False)
-    t1 = time.time()
-
-    avg_latency_ms = round(((t1 - t0) / 20) * 1000, 2)
-    fps = round(1000.0 / max(avg_latency_ms, 0.1), 2)
-
-    # Export to ONNX
+    # Speed benchmark using real ONNX Runtime engine
     print("--> Exporting to ONNX format...")
     onnx_file = best_model.export(format="onnx", imgsz=640, dynamic=False, opset=12)
     final_onnx_path = os.path.join(MODEL_DIR, "best.onnx")
-    if os.path.exists(onnx_file):
+    if os.path.abspath(onnx_file) != os.path.abspath(final_onnx_path):
         shutil.copy2(onnx_file, final_onnx_path)
     print(f"ONNX model saved at {final_onnx_path}")
 
     # Export to TFLite (bonus requirement)
     tflite_exported = False
     try:
-        print("--> Attempting export to TFLite format...")
+        print("--> Exporting to TFLite format...")
         tflite_file = best_model.export(format="tflite", imgsz=640)
         final_tflite_path = os.path.join(MODEL_DIR, "best.tflite")
-        if os.path.exists(tflite_file):
+        if os.path.abspath(tflite_file) != os.path.abspath(final_tflite_path):
             shutil.copy2(tflite_file, final_tflite_path)
-            tflite_exported = True
-            print(f"TFLite model saved at {final_tflite_path}")
+        tflite_exported = True
+        print(f"TFLite model saved at {final_tflite_path}")
     except Exception as e:
         print(f"TFLite export note: {e}")
+
+    # Real ONNX Runtime latency measurement
+    import onnxruntime as ort
+    session = ort.InferenceSession(final_onnx_path, providers=['CPUExecutionProvider'])
+    input_name = session.get_inputs()[0].name
+    dummy_input = np.random.randn(1, 3, 640, 640).astype(np.float32)
+
+    # Warmup
+    for _ in range(5):
+        session.run(None, {input_name: dummy_input})
+    
+    t0 = time.perf_counter()
+    num_runs = 30
+    for _ in range(num_runs):
+        session.run(None, {input_name: dummy_input})
+    t1 = time.perf_counter()
+
+    avg_latency_ms = round(((t1 - t0) / num_runs) * 1000, 2)
+    fps = round(1000.0 / max(avg_latency_ms, 0.1), 2)
 
     # Save metrics JSON
     metrics_data = {
@@ -200,13 +220,14 @@ def train_and_eval():
     with open(metrics_path, "w") as f:
         json.dump(metrics_data, f, indent=2)
 
-    print("\n================ FINAL METRICS ================")
+    print("\n================ RAW MEASURED RESULTS ================")
+    print(f"Author:      Nathenael Ermias")
     print(f"mAP@0.5:     {map50:.4f}")
     print(f"mAP@0.5:0.95:{map50_95:.4f}")
     print(f"Precision:   {precision:.4f}")
     print(f"Recall:      {recall:.4f}")
-    print(f"Latency:     {avg_latency_ms} ms")
-    print(f"FPS:         {fps}")
+    print(f"ONNX Latency:{avg_latency_ms} ms")
+    print(f"ONNX FPS:    {fps}")
     print(f"Metrics saved to {metrics_path}")
 
 if __name__ == "__main__":

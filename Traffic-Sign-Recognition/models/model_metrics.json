@@ -1,0 +1,233 @@
+{
+  "author": "Nathenael Ermias",
+  "dataset": "GTSDB (German Traffic Sign Detection Benchmark)",
+  "model_architecture": "YOLOv8n",
+  "map50": 0.0138,
+  "map50_95": 0.0094,
+  "precision": 0.0109,
+  "recall": 0.2371,
+  "latency_ms": 73.21,
+  "fps": 13.66,
+  "onnx_exported": true,
+  "tflite_exported": true,
+  "class_count": 43,
+  "classes": [
+    "Speed limit (20km/h)",
+    "Speed limit (30km/h)",
+    "Speed limit (50km/h)",
+    "Speed limit (60km/h)",
+    "Speed limit (70km/h)",
+    "Speed limit (80km/h)",
+    "End of speed limit (80km/h)",
+    "Speed limit (100km/h)",
+    "Speed limit (120km/h)",
+    "No passing",
+    "No passing for heavy vehicles",
+    "Right-of-way at intersection",
+    "Priority road",
+    "Yield",
+    "Stop",
+    "No vehicles",
+    "Heavy vehicles prohibited",
+    "No entry",
+    "General caution",
+    "Dangerous curve left",
+    "Dangerous curve right",
+    "Double curve",
+    "Bumpy road",
+    "Slippery road",
+    "Road narrows right",
+    "Road work",
+    "Traffic signals",
+    "Pedestrians",
+    "Children crossing",
+    "Bicycles crossing",
+    "Beware of ice/snow",
+    "Wild animals crossing",
+    "End of speed and passing limits",
+    "Turn right ahead",
+    "Turn left ahead",
+    "Ahead only",
+    "Go straight or right",
+    "Go straight or left",
+    "Keep right",
+    "Keep left",
+    "Roundabout mandatory",
+    "End of no passing",
+    "End of no passing for heavy vehicles"
+  ],
+  "per_class_metrics": {
+    "0": {
+      "name": "Speed limit (20km/h)",
+      "mAP50": 0.0094
+    },
+    "1": {
+      "name": "Speed limit (30km/h)",
+      "mAP50": 0.1019
+    },
+    "2": {
+      "name": "Speed limit (50km/h)",
+      "mAP50": 0.0715
+    },
+    "3": {
+      "name": "Speed limit (60km/h)",
+      "mAP50": 0.0032
+    },
+    "4": {
+      "name": "Speed limit (70km/h)",
+      "mAP50": 0.007
+    },
+    "5": {
+      "name": "Speed limit (80km/h)",
+      "mAP50": 0.0128
+    },
+    "6": {
+      "name": "End of speed limit (80km/h)",
+      "mAP50": 0.0
+    },
+    "7": {
+      "name": "Speed limit (100km/h)",
+      "mAP50": 0.0202
+    },
+    "8": {
+      "name": "Speed limit (120km/h)",
+      "mAP50": 0.0121
+    },
+    "9": {
+      "name": "No passing",
+      "mAP50": 0.0088
+    },
+    "10": {
+      "name": "No passing for heavy vehicles",
+      "mAP50": 0.0141
+    },
+    "11": {
+      "name": "Right-of-way at intersection",
+      "mAP50": 0.0094
+    },
+    "12": {
+      "name": "Priority road",
+      "mAP50": 0.0456
+    },
+    "13": {
+      "name": "Yield",
+      "mAP50": 0.0094
+    },
+    "14": {
+      "name": "Stop",
+      "mAP50": 0.0094
+    },
+    "15": {
+      "name": "No vehicles",
+      "mAP50": 0.0
+    },
+    "16": {
+      "name": "Heavy vehicles prohibited",
+      "mAP50": 0.0
+    },
+    "17": {
+      "name": "No entry",
+      "mAP50": 0.0
+    },
+    "18": {
+      "name": "General caution",
+      "mAP50": 0.0062
+    },
+    "19": {
+      "name": "Dangerous curve left",
+      "mAP50": 0.0
+    },
+    "20": {
+      "name": "Dangerous curve right",
+      "mAP50": 0.0094
+    },
+    "21": {
+      "name": "Double curve",
+      "mAP50": 0.0
+    },
+    "22": {
+      "name": "Bumpy road",
+      "mAP50": 0.0
+    },
+    "23": {
+      "name": "Slippery road",
+      "mAP50": 0.0025
+    },
+    "24": {
+      "name": "Road narrows right",
+      "mAP50": 0.0
+    },
+    "25": {
+      "name": "Road work",
+      "mAP50": 0.0103
+    },
+    "26": {
+      "name": "Traffic signals",
+      "mAP50": 0.0
+    },
+    "27": {
+      "name": "Pedestrians",
+      "mAP50": 0.0
+    },
+    "28": {
+      "name": "Children crossing",
+      "mAP50": 0.0
+    },
+    "29": {
+      "name": "Bicycles crossing",
+      "mAP50": 0.0
+    },
+    "30": {
+      "name": "Beware of ice/snow",
+      "mAP50": 0.0
+    },
+    "31": {
+      "name": "Wild animals crossing",
+      "mAP50": 0.0
+    },
+    "32": {
+      "name": "End of speed and passing limits",
+      "mAP50": 0.0
+    },
+    "33": {
+      "name": "Turn right ahead",
+      "mAP50": 0.0
+    },
+    "34": {
+      "name": "Turn left ahead",
+      "mAP50": 0.0
+    },
+    "35": {
+      "name": "Ahead only",
+      "mAP50": 0.0
+    },
+    "36": {
+      "name": "Go straight or right",
+      "mAP50": 0.0
+    },
+    "37": {
+      "name": "Go straight or left",
+      "mAP50": 0.0
+    },
+    "38": {
+      "name": "Keep right",
+      "mAP50": 0.0395
+    },
+    "39": {
+      "name": "Keep left",
+      "mAP50": 0.0
+    },
+    "40": {
+      "name": "Roundabout mandatory",
+      "mAP50": 0.0
+    },
+    "41": {
+      "name": "End of no passing",
+      "mAP50": 0.0
+    },
+    "42": {
+      "name": "End of no passing for heavy vehicles",
+      "mAP50": 0.0
+    }
+  }
+}
